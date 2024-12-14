@@ -1,11 +1,11 @@
 const apiEndpoint = 'http://localhost:3000/students';
 
-// Fetch and display students
+
 async function fetchStudents() {
   try {
     const response = await fetch(apiEndpoint, {
       method: 'GET',
-      credentials: 'same-origin', // Ensure cookies are sent with the request
+      credentials: 'same-origin', 
     });
 
     if (!response.ok) {
@@ -32,7 +32,7 @@ async function fetchStudents() {
 }
 
 
-// Save student
+
 async function saveStudent(event) {
   event.preventDefault();
 
@@ -84,7 +84,7 @@ async function editStudent(id) {
   }
 }
 
-// Delete student
+
 async function deleteStudent(id) {
   try {
     const response = await fetch(`${apiEndpoint}/${id}`, { method: 'DELETE' });
@@ -98,8 +98,7 @@ async function deleteStudent(id) {
   }
 }
 
-// Event listener for form submission
+
 document.getElementById('studentForm').addEventListener('submit', saveStudent);
 
-// Initial fetch of students
 fetchStudents();

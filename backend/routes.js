@@ -4,7 +4,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const Student = require('./model'); // Ensure you have a model.js for the Mongoose schema
+const Student = require('./model'); 
 
 
 const app = express();
@@ -12,19 +12,19 @@ const app = express();
 
 // Middleware
 app.use(cors());
-app.use(express.json()); // To parse JSON bodies
-app.use(cookieParser()); // To parse cookies
+app.use(express.json()); 
+app.use(cookieParser()); 
 
 
-// Configure Session
+
 app.use(session({
- secret: 'your-secret-key', // Replace with a secure, random string in production
- resave: false,             // Prevents session being saved if it hasn't changed
- saveUninitialized: false,  // Prevents saving uninitialized sessions
+ secret: 'your-secret-key', 
+ resave: false,            
+ saveUninitialized: false,
  cookie: {
-   maxAge: 1000 * 60 * 60,  // Session duration (1 hour)
-   httpOnly: true,          // Makes the cookie inaccessible to client-side JavaScript
-   secure: false,           // Set to true if using HTTPS
+   maxAge: 1000 * 60 * 60,  
+   httpOnly: true,         
+   secure: false,           
  },
 }));
 
@@ -37,25 +37,25 @@ mongoose.connect('mongodb://localhost:27017/studentManagement', {
  .then(() => console.log('Connected to MongoDB'))
  .catch(err => {
    console.error('Could not connect to MongoDB:', err);
-   process.exit(1); // Exit process on failure to connect to MongoDB
+   process.exit(1); 
  });
 
 
-// Test route to set session data and cookies
+
 app.get('/set-session-cookie', (req, res) => {
  req.session.user = {
    name: 'Quratulan Ilyas',
    role: 'Student',
  };
- req.session.isAdmin = true;  // Set admin flag
+ req.session.isAdmin = true;  
  req.session.visited = req.session.visited ? req.session.visited + 1 : 1;
 
 
- // Set a custom cookie
+
  res.cookie('customCookie', 'This is a custom cookie value', {
-   maxAge: 1000 * 60 * 60,  // Cookie duration (1 hour)
-   httpOnly: true,          // Prevent access by client-side JavaScript
-   secure: false,           // Set to true if using HTTPS
+   maxAge: 1000 * 60 * 60,  
+   httpOnly: true,          
+   secure: false,           
  });
 
 
@@ -66,14 +66,14 @@ app.get('/set-session-cookie', (req, res) => {
 });
 
 
-// Test route to get session and cookie data
+
 app.get('/get-session-cookie', (req, res) => {
- // Retrieve session data
+
  const sessionData = req.session.user || 'No session data found';
  const visited = req.session.visited || 0;
 
 
- // Retrieve cookie data
+
  const cookieData = req.cookies.customCookie || 'No cookie found';
 
 
@@ -85,7 +85,7 @@ app.get('/get-session-cookie', (req, res) => {
 });
 
 
-// Test route to destroy session and clear cookies
+
 app.get('/destroy-session-cookie', (req, res) => {
  // Destroy session
  req.session.destroy(err => {
@@ -93,29 +93,28 @@ app.get('/destroy-session-cookie', (req, res) => {
      console.error('Error destroying session:', err);
      return res.status(500).json({ message: 'Failed to destroy session' });
    }
-   // Clear the session cookie
+
    res.clearCookie('connect.sid');
-   // Clear the custom cookie
+ 
    res.clearCookie('customCookie');
    res.status(200).json({ message: 'Session and cookies cleared successfully' });
  });
 });
 
 
-// Route to track view count
+
 app.get('/view-count', (req, res) => {
  if (!req.session.viewCount) {
-   req.session.viewCount = 0;  // Initialize viewCount if it's not set
+   req.session.viewCount = 0;  
  }
- req.session.viewCount++;  // Increment the view count
+ req.session.viewCount++;  
  res.send(`You have visited this page ${req.session.viewCount} times.`);
 });
 
 
-// Admin middleware to protect routes
 app.use((req, res, next) => {
  if (req.session.isAdmin) {
-   next(); // Allow access if admin session is true
+   next(); 
  } else {
    res.send("Not admin");
  }
@@ -124,14 +123,13 @@ app.use((req, res, next) => {
 
 
 
-// Routes
-// Test route
+
 app.get('/', (req, res) => {
  res.send("Hello, Student Management API with sessions and cookies is running!");
 });
 
 
-// Fetch all students
+
 app.get('/students', async (req, res) => {
  try {
    const students = await Student.find();
@@ -142,7 +140,7 @@ app.get('/students', async (req, res) => {
 });
 
 
-// Fetch a single student by ID
+
 app.get('/students/:id', async (req, res) => {
  try {
    const student = await Student.findById(req.params.id);
@@ -154,7 +152,7 @@ app.get('/students/:id', async (req, res) => {
 });
 
 
-// Create a new student
+
 app.post('/students', async (req, res) => {
  const { name, departments, course } = req.body;
 
@@ -171,7 +169,7 @@ app.post('/students', async (req, res) => {
 });
 
 
-// Update an existing student by ID
+
 app.put('/students/:id', async (req, res) => {
  const { name, departments, course } = req.body;
 
@@ -190,7 +188,7 @@ app.put('/students/:id', async (req, res) => {
 });
 
 
-// Delete a student by ID
+
 app.delete('/students/:id', async (req, res) => {
  try {
    const deletedStudent = await Student.findByIdAndDelete(req.params.id);
@@ -202,7 +200,7 @@ app.delete('/students/:id', async (req, res) => {
 });
 
 
-// Start the server
+
 const PORT = 3000;
 app.listen(PORT, () => {
  console.log(`Server is running on http://localhost:${PORT}`);
