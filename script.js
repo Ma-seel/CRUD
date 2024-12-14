@@ -1,72 +1,105 @@
-const apiEndpoint = 'https://672ddb98fd8979715643fda7.mockapi.io/api/dummyapi/Students';
+const apiEndpoint = 'http://localhost:3000/students';
 
-
+// Fetch and display students
 async function fetchStudents() {
-  const response = await fetch(apiEndpoint);
-  const students = await response.json();
-  const studentList = document.getElementById('studentList');
-  studentList.innerHTML = '';
-  students.forEach(student => {
-    const studentItem = document.createElement('li');
-    studentItem.className = 'student-item';
-    studentItem.innerHTML = `
-      <strong>${student.name}</strong> - ${student.departments} - ${student.course}
-      <button onclick="editStudent(${student.id})">Edit</button>
-      <button onclick="deleteStudent(${student.id})">Delete</button>
-    `;
-    studentList.appendChild(studentItem);
-  });
+  try {
+    const response = await fetch(apiEndpoint, {
+      method: 'GET',
+      credentials: 'same-origin', // Ensure cookies are sent with the request
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch students: ${response.statusText}`);
+    }
+
+    const students = await response.json();
+    const studentList = document.getElementById('studentList');
+    studentList.innerHTML = '';
+    students.forEach(student => {
+      const studentItem = document.createElement('li');
+      studentItem.className = 'student-item';
+      studentItem.innerHTML = `
+        <strong>${student.name}</strong> - ${student.departments} - ${student.course}
+        <button onclick="editStudent(${student.id})">Edit</button>
+        <button onclick="deleteStudent(${student.id})">Delete</button>
+      `;
+      studentList.appendChild(studentItem);
+    });
+  } catch (error) {
+    console.error('An error occurred while fetching students:', error.message);
+    alert('An error occurred while fetching students. Please try again.');
+  }
 }
 
 
+// Save student
 async function saveStudent(event) {
   event.preventDefault();
-  const studentId = document.getElementById('studentId').value;
+
   const name = document.getElementById('name').value;
   const departments = document.getElementById('departments').value;
   const course = document.getElementById('course').value;
 
   const studentData = { name, departments, course };
+  const editingId = document.getElementById('studentForm').dataset.editingId;
 
-  if (studentId) {
-    // Update operation
-    await fetch(`${apiEndpoint}/${studentId}`, {
-      method: 'PUT',
+  try {
+    const url = editingId ? `${apiEndpoint}/${editingId}` : apiEndpoint;
+    const method = editingId ? 'PUT' : 'POST';
+
+    const response = await fetch(url, {
+      method: method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(studentData),
     });
-  } else {
-    // Create operation
-    await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(studentData),
-    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to ${editingId ? 'update' : 'save'} student: ${response.statusText}`);
+    }
+
+    document.getElementById('studentForm').reset();
+    delete document.getElementById('studentForm').dataset.editingId;
+    fetchStudents();
+  } catch (error) {
+    console.error('A error occurred while saving the student:', error.message);
+    alert('An error occurred while saving the student. Please try again.');
   }
-
-  
-  document.getElementById('studentForm').reset();
-  document.getElementById('studentId').value = '';
-  fetchStudents();
 }
 
-
+// Edit student
 async function editStudent(id) {
-  const response = await fetch(`${apiEndpoint}/${id}`);
-  const student = await response.json();
-  document.getElementById('studentId').value = student.id;
-  document.getElementById('name').value = student.name;
-  document.getElementById('departments').value = student.departments;
-  document.getElementById('course').value = student.course;
+  try {
+    const response = await fetch(`${apiEndpoint}/${id}`);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch student: ${response.statusText}`);
+    }
+    const student = await response.json();
+    document.getElementById('name').value = student.name;
+    document.getElementById('departments').value = student.departments;
+    document.getElementById('course').value = student.course;
+    document.getElementById('studentForm').dataset.editingId = id;
+  } catch (error) {
+    console.error('An error occurred while fetching the student details:', error.message);
+    alert('An error occurred while fetching the student details. Please try again.');
+  }
 }
 
+// Delete student
 async function deleteStudent(id) {
-  await fetch(`${apiEndpoint}/${id}`, { method: 'DELETE' });
-  fetchStudents();
+  try {
+    const response = await fetch(`${apiEndpoint}/${id}`, { method: 'DELETE' });
+    if (!response.ok) {
+      throw new Error(`Failed to delete student: ${response.statusText}`);
+    }
+    fetchStudents();
+  } catch (error) {
+    console.error('A error occurred while deleting the student:', error.message);
+    alert('An error occurred while deleting the student. Please try again.');
+  }
 }
 
-
+// Event listener for form submission
 document.getElementById('studentForm').addEventListener('submit', saveStudent);
 
-
+// Initial fetch of students
 fetchStudents();
