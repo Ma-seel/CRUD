@@ -5,9 +5,15 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const Student = require('./model'); 
-
-
+const User =require('./user');
 const app = express();
+
+
+app.set('view engine', 'ejs');
+app.set('views' , 'views');
+
+
+
 
 
 // Middleware
@@ -16,9 +22,9 @@ app.use(express.json());
 app.use(cookieParser()); 
 
 
-
+//configure seession
 app.use(session({
- secret: 'your-secret-key', 
+ secret: 'Sp23-bse-140', 
  resave: false,            
  saveUninitialized: false,
  cookie: {
@@ -27,6 +33,7 @@ app.use(session({
    secure: false,           
  },
 }));
+
 
 
 // MongoDB Connection
@@ -45,7 +52,7 @@ mongoose.connect('mongodb://localhost:27017/studentManagement', {
 app.get('/set-session-cookie', (req, res) => {
  req.session.user = {
    name: 'Quratulan Ilyas',
-   role: 'Student',
+   role: 'admin',
  };
  req.session.isAdmin = true;  
  req.session.visited = req.session.visited ? req.session.visited + 1 : 1;
@@ -199,6 +206,70 @@ app.delete('/students/:id', async (req, res) => {
  }
 });
 
+app.set('view engine', 'ejs');
+app.use(express.urlencoded({extended: true})); const UserAuth = require('./user');
+const bcrypt = require('bcrypt');
+
+app.get('/secret', (req, res) => {
+  if (!req.session.user_id) {
+    return  res.redirect('/login');
+  }
+  else {
+      res.render('secret');
+  }
+});
+
+app.get('/', (req, res) => {
+  res.send('This is home page');
+});
+
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+
+  if (!username || !password) {
+    return res.status(400).send('All fields are required');
+  }
+
+  const hash = await bcrypt.hash(password, 12);
+  const user = new User({
+    username,
+    password: hash,
+  });
+  await user.save();
+  req.session.user_id = user._id;
+  res.redirect('/');
+});
+
+
+
+app.post('/logout', (req, res) => {
+  req.session.user_id = null;
+  res.redirect('/');
+})
+
+
+
+app.get('/login', (req , res) => {
+  res.render('login');
+})
+
+app.post('/login',async (req , res) => {
+  const {username, password } = req.body;
+  const user = await User.findOne({username});
+  const validPassword = await bcrypt.compare(password, user.password);
+  if (validPassword) {
+      req.session.user_id = user._id;
+      res.redirect('/secret');
+  }
+  else {
+   console.log('cant find that user');
+      res.redirect('/login');
+  }
+});
 
 
 const PORT = 3000;
